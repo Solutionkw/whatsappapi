@@ -4,7 +4,7 @@
   "description": " WhatsApp API",
   "main": "App.js",
   "scripts": {
-    "start": "node App.js"
+    "start": "node app.js"
   },
   "dependencies": {
     "express": "^4.18.2"
@@ -14,3 +14,4 @@
   }
 
 }
+
