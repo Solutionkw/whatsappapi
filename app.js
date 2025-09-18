@@ -1,17 +1,12 @@
-// Import Express.js
 const express = require('express');
-
-// Create an Express app
 const app = express();
-
-// Middleware to parse JSON bodies
 app.use(express.json());
 
-// Set port and verify_token
-const port = process.env.PORT || 3000;
+// Get port from environment variable (Cloud Run sets PORT=8080)
+const port = parseInt(process.env.PORT) || 8080;
 const verifyToken = process.env.VERIFY_TOKEN;
 
-// Route for GET requests
+// Webhook verification
 app.get('/', (req, res) => {
   const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = req.query;
 
@@ -23,7 +18,7 @@ app.get('/', (req, res) => {
   }
 });
 
-// Route for POST requests
+// Receive messages
 app.post('/', (req, res) => {
   const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
   console.log(`\n\nWebhook received ${timestamp}\n`);
@@ -31,8 +26,12 @@ app.post('/', (req, res) => {
   res.status(200).end();
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`\nListening on port ${port}\n`);
+// Health check endpoint (important for Cloud Run)
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
- 
+
+// Start the server on the correct port
+app.listen(port, '0.0.0.0', () => {
+  console.log(`WhatsApp Webhook listening on port ${port}`);
+});
