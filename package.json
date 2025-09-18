@@ -2,9 +2,9 @@
   "name": "whatsappapi",
   "version": "1.0.0",
   "description": " WhatsApp API",
-  "main": "app.js",
+  "main": "App.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node App.js"
   },
   "dependencies": {
     "express": "^4.18.2"
@@ -12,4 +12,5 @@
   "engines": {
     "node": ">=18.0.0"
   }
+
 }
