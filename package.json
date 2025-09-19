@@ -1,17 +1,17 @@
 {
-  "name": "whatsappapi",
+  "name": "whatsapp-webhook",
   "version": "1.0.0",
-  "description": " WhatsApp API",
+  "description": "WhatsApp Webhook with Firestore integration",
   "main": "App.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "firebase-admin": "^11.11.0"
   },
   "engines": {
     "node": ">=18.0.0"
   }
-
 }
-
