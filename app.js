@@ -127,3 +127,4 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`Health check: https://whatsapp-webhook-774887765344.us-central1.run.app/health`);
   console.log(`View messages: https://whatsapp-webhook-774887765344.us-central1.run.app/messages`);
 });
+
