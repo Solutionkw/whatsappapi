@@ -2,8 +2,12 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
-// Get port from environment variable (Cloud Run sets PORT=8080)
-const port = parseInt(process.env.PORT) || 8080;
+// Good ✅
+const port = process.env.PORT || 8080;
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server listening on port ${port}`);
+});
 const verifyToken = process.env.VERIFY_TOKEN;
 
 // Webhook verification
@@ -35,3 +39,4 @@ app.get('/health', (req, res) => {
 app.listen(port, '0.0.0.0', () => {
   console.log(`WhatsApp Webhook listening on port ${port}`);
 });
+
