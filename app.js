@@ -5,7 +5,7 @@ app.use(express.json());
 
 const port = parseInt(process.env.PORT) || 8080;
 const verifyToken = process.env.VERIFY_TOKEN || "default_token";
-const mongoUri = process.env.MONGODB_URI || "mongodb+srv://drmdnaji5501_db_user:czO9aeNcm4j6TXrk@cluster0.slmif7y.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const mongoUri = process.env.MONGODB_URI || "your_mongodb_connection_string";
 
 // MongoDB connection
 let db;
