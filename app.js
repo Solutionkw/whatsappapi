@@ -1,6 +1,7 @@
 const express = require('express');
 const { initializeApp } = require('firebase-admin/app'); // ADDED
 const { getFirestore } = require('firebase-admin/firestore'); // ADDED
+const axios = require('axios');
 
 // ADDED: Initialize Firebase Admin SDK
 // When running on Google Cloud (like Cloud Run), the SDK automatically
@@ -17,6 +18,44 @@ const verifyToken = process.env.VERIFY_TOKEN || "default_token";
 // REMOVED: In-memory storage is no longer needed
 // const messages = [];
 
+
+
+// Add this near the top with other constants
+const authorizationToken = process.env.AUTHORIZATION_TOKEN;
+
+// Update the sendWhatsAppMessage function
+async function sendWhatsAppMessage(to, text) {
+  try {
+    const response = await axios.post(
+      `https://graph.facebook.com/v19.0/100272552881881/messages`,
+      {
+        messaging_product: 'whatsapp',
+        to: to,
+        type: 'text',
+        text: { body: text }
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${authorizationToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    console.log('Response sent successfully');
+  } catch (error) {
+    console.error('Error sending response:', error.response?.data);
+  }
+}
+
+
+
+
+
+
+
+
+
+
 // Webhook verification (no changes needed here)
 app.get('/', (req, res) => {
   const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = req.query;
@@ -31,7 +70,7 @@ app.get('/', (req, res) => {
 });
 
 // Receive and store messages in Firestore
-app.post('/', async (req, res) => { // CHANGED: Added 'async'
+app.post('/', async (req, res) => {  
   try {
     const body = req.body;
     const timestamp = new Date().toISOString();
@@ -77,12 +116,34 @@ app.post('/', async (req, res) => { // CHANGED: Added 'async'
       console.log('Non-message event stored in Firestore');
     }
 
+  // ADD AUTOMATED RESPONSE HERE
+      if (message.text && message.text.body) {
+        const userMessage = message.text.body.toLowerCase();
+        let responseText = "Thank you for your message!";
+        
+        if (userMessage.includes('hello') || userMessage.includes('hi')) {
+          responseText = "Hello! How can I help you today?";
+        } else if (userMessage.includes('help')) {
+          responseText = "I'm here to help! What do you need assistance with?";
+        } else if (userMessage.includes('price') || userMessage.includes('cost')) {
+          responseText = "Please contact us for pricing information.";
+        }
+        
+        // Send automated response
+        await sendWhatsAppMessage(message.from, responseText);
+      }
+    }
+    
     res.status(200).end();
   } catch (error) {
     console.error('Error processing message:', error);
-    res.status(200).end(); // Respond with 200 to prevent webhook retries
+    res.status(200).end();
   }
 });
+
+
+    
+ 
 
 // View stored messages from Firestore
 app.get('/messages', async (req, res) => { // CHANGED: Added 'async'
@@ -110,6 +171,45 @@ app.get('/messages', async (req, res) => { // CHANGED: Added 'async'
   }
 });
 
+// Add user management functions
+async function updateUserProfile(userId, userName) {
+  try {
+    await db.collection('users').doc(userId).set({
+      name: userName,
+      lastMessage: new Date(),
+      messageCount: admin.firestore.FieldValue.increment(1)
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+  }
+}
+
+// Use it in your message processing:
+if (message && message.from) {
+  const userName = body.entry[0].changes[0].value.contacts[0].profile.name;
+  await updateUserProfile(message.from, userName);
+}
+
+// Add analytics endpoint
+app.get('/stats', async (req, res) => {
+  try {
+    const messagesCount = await db.collection('whatsapp_messages').count().get();
+    const usersCount = await db.collection('users').count().get();
+    
+    res.status(200).json({
+      total_messages: messagesCount.data().count,
+      total_users: usersCount.data().count,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
+
+
 // Health check endpoint (updated)
 app.get('/health', (req, res) => {
   // CHANGED: Removed message_count to keep the health check fast and simple.
@@ -127,4 +227,5 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`Health check: https://whatsapp-webhook-774887765344.us-central1.run.app/health`);
   console.log(`View messages: https://whatsapp-webhook-774887765344.us-central1.run.app/messages`);
 });
+
 
